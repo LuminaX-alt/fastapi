@@ -1,9 +1,27 @@
 from typing import Union
-
 from fastapi import FastAPI, Form
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 from typing_extensions import Annotated
+from fastapi import FastAPI, Form
+from fastapi.testclient import TestClient
+from pydantic import BaseModel
+
+def test_form_metadata_and_defaults():
+    app = FastAPI()
+    class Item(BaseModel):
+        name: str
+        age: int = 25  # default should not be enforced
+
+    @app.post("/submit")
+    async def submit(data: Item = Form(...)):
+        return data
+
+    client = TestClient(app)
+    response = client.post("/submit", data={"name": "Alice"})
+    assert response.status_code == 200
+    assert response.json() == {"name": "Alice", "age": 25}
+
 
 app = FastAPI()
 
