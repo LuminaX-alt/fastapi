@@ -25,6 +25,24 @@ def test_security_http_base_no_credentials():
     response = client.get("/users/me")
     assert response.status_code == 403, response.text
     assert response.json() == {"detail": "Not authenticated"}
+def test_basic_auth_realm_is_required():
+    from fastapi.security import HTTPBasic
+    from fastapi.testclient import TestClient
+    from fastapi import FastAPI, Depends
+
+    security = HTTPBasic(realm="MyRealm")
+
+    app = FastAPI()
+
+    @app.get("/secure")
+    def secure(credentials=Depends(security)):
+        return {"ok": True}
+
+    client = TestClient(app)
+    response = client.get("/secure")
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == 'Basic realm="MyRealm"'
+
 
 
 def test_openapi_schema():
