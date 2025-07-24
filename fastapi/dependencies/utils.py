@@ -1,4 +1,22 @@
 import inspect
+from pydantic.fields import FieldInfo
+
+def create_form_field(param):
+    """
+    Preserve metadata when creating form fields for Pydantic models.
+    """
+    form_param: Form = param.default
+    default_value = None if form_param.default is ... else form_param.default
+
+    field_info = FieldInfo(
+        default=default_value,
+        title=form_param.title or param.name,
+        description=form_param.description,
+        examples=form_param.examples,
+        alias=form_param.alias or param.name
+    )
+    return field_info
+
 from contextlib import AsyncExitStack, contextmanager
 from copy import copy, deepcopy
 from dataclasses import dataclass
@@ -242,6 +260,11 @@ def get_typed_signature(call: Callable[..., Any]) -> inspect.Signature:
     ]
     typed_signature = inspect.Signature(typed_params)
     return typed_signature
+    if isinstance(param.default, Form):
+    field = create_form_field(param)
+    values[param.name] = await request.form().get(param.alias or param.name, field.default)
+    continue
+
 
 
 def get_typed_annotation(annotation: Any, globalns: Dict[str, Any]) -> Any:
