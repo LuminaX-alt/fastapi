@@ -72,6 +72,21 @@ from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.websockets import WebSocket
 from typing_extensions import Annotated, get_args, get_origin
+from fastapi.params import Form
+from fastapi.datastructures import FormData
+
+async def request_body_to_args(request, param):
+    # ensure form parsing preserves all fields
+    if isinstance(param.default, Form):
+        form_data = await request.form()
+        if not isinstance(form_data, FormData):
+            form_data = FormData(form_data)
+        value = form_data.get(param.alias or param.name)
+        if value is None and param.default.default is ...:
+            raise ValueError(f"Missing form field: {param.name}")
+        return value
+    return None
+
 
 multipart_not_installed_error = (
     'Form data requires "python-multipart" to be installed. \n'
@@ -312,8 +327,15 @@ def get_dependant(
         else:
             add_param_to_fields(field=param_details.field, dependant=dependant)
     return dependant
+    
 
+def solve_dependacies()
+if isinstance(param.default, Form):
+    value = await request_body_to_args(request, param)
+    values[param.name] = value
+    continue
 
+    
 def add_non_field_param_to_dependency(
     *, param_name: str, type_annotation: Any, dependant: Dependant
 ) -> Optional[bool]:
