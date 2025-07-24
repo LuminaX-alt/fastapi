@@ -1,3 +1,26 @@
+import pytest
+from fastapi import FastAPI, Form
+from fastapi.testclient import TestClient
+
+def test_multiple_form_fields():
+    app = FastAPI()
+    @app.post("/submit")
+    async def submit(name: str = Form(...), age: int = Form(...)):
+        return {"name": name, "age": age}
+    client = TestClient(app)
+    response = client.post("/submit", data={"name": "Alice", "age": "30"})
+    assert response.status_code == 200
+    assert response.json() == {"name": "Alice", "age": 30}
+
+def test_missing_form_field():
+    app = FastAPI()
+    @app.post("/submit")
+    async def submit(name: str = Form(...), age: int = Form(...)):
+        return {"name": name, "age": age}
+    client = TestClient(app)
+    response = client.post("/submit", data={"name": "Alice"})
+    assert response.status_code == 422
+
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
