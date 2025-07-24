@@ -209,6 +209,19 @@ def get_flat_dependant(
     return flat_dependant
 
 
+async def resolve_dependency(call, **kwargs):
+    result = call(**kwargs)
+    if inspect.isasyncgen(result):
+        # Async context manager
+        cm = contextlib.asynccontextmanager(lambda: result)
+        return await cm().__aenter__()
+    elif inspect.isgenerator(result):
+        # Sync context manager
+        cm = contextlib.contextmanager(lambda: result)
+        return cm().__enter__()
+    return result
+
+
 def _get_flat_fields_from_params(fields: List[ModelField]) -> List[ModelField]:
     if not fields:
         return fields
@@ -998,4 +1011,17 @@ def get_body_field(
         alias="body",
         field_info=BodyFieldInfo(**BodyFieldInfo_kwargs),
     )
+    # When request finishes
+@app.middleware("http")
+async def close_context_managers(request, call_next):
+    try:
+        response = await call_next(request)
+    finally:
+        for cm in getattr(request.state, "cleanup_contexts", []):
+            if hasattr(cm, "__aexit__"):
+                await cm.__aexit__(None, None, None)
+            elif hasattr(cm, "__exit__"):
+                cm.__exit__(None, None, None)
+    return response
+
     return final_field
