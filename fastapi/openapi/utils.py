@@ -33,6 +33,26 @@ from fastapi.utils import (
     is_body_allowed_for_status_code,
 )
 from pydantic import BaseModel
+def get_form_examples(field):
+    # Extract example from Form/File fields
+    if hasattr(field, "field_info") and getattr(field.field_info, "example", None) is not None:
+        return field.field_info.example
+    return None
+
+def create_form_body_schema(fields):
+    properties = {}
+    examples = {}
+    for name, field in fields.items():
+        schema = field.type_.schema() if hasattr(field.type_, "schema") else {"type": "string"}
+        properties[name] = schema
+        example = get_form_examples(field)
+        if example is not None:
+            examples[name] = example
+    body_schema = {"type": "object", "properties": properties}
+    if examples:
+        body_schema["example"] = examples
+    return body_schema
+
 from starlette.responses import JSONResponse
 from starlette.routing import BaseRoute
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
