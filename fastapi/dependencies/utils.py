@@ -86,6 +86,16 @@ multipart_incorrect_install_error = (
     'And then install "python-multipart" with: \n\n'
     "pip install python-multipart\n"
 )
+from pydantic import BaseModel
+
+def should_use_body_for_dependant(dependant, path_method: str) -> bool:
+    """
+    Decides whether to treat a dependant as a request body.
+    For GET methods, never require body for Pydantic models.
+    """
+    if path_method.upper() == "GET" and issubclass(dependant.type, BaseModel):
+        return False
+    return True
 
 
 def ensure_multipart_is_installed() -> None:
