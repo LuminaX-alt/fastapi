@@ -1,6 +1,19 @@
 import http.client
 import inspect
 import warnings
+import enum
+
+def add_property_names_for_enum_keys(schema, field_type):
+    """Add propertyNames with enum if dict keys are Enum."""
+    if (
+        getattr(field_type, "__origin__", None) is dict
+        and len(getattr(field_type, "__args__", [])) == 2
+    ):
+        key_type = field_type.__args__[0]
+        if isinstance(key_type, type) and issubclass(key_type, enum.Enum):
+            schema["propertyNames"] = {"enum": [e.value for e in key_type]}
+    return schema
+
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 
 from fastapi import routing
