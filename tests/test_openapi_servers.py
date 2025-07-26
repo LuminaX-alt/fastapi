@@ -21,7 +21,16 @@ def foo():
 
 client = TestClient(app)
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
+def test_openapi_servers_propagation():
+    servers = [{"url": "https://api.example.com"}]
+    app = FastAPI(servers=servers)
+    client = TestClient(app)
+    schema = client.get("/openapi.json").json()
+    assert "servers" in schema
+    assert schema["servers"] == servers
 def test_app():
     response = client.get("/foo")
     assert response.status_code == 200, response.text
