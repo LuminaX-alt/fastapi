@@ -174,6 +174,22 @@ def generate_operation_id_for_path(
     operation_id = re.sub(r"\W", "_", operation_id)
     operation_id = f"{operation_id}_{method.lower()}"
     return operation_id
+    def generate_unique_id(route: APIRoute):
+    """
+    Generate a unique operationId for OpenAPI.
+    Ensures uniqueness when a single endpoint supports multiple HTTP methods.
+    """
+    # Use the endpoint function name
+    base_id = route.endpoint.__name__
+    # If multiple methods exist, append the method to ensure uniqueness
+    if len(route.methods) > 1:
+        # Sort to make IDs stable regardless of order
+        methods_suffix = "_".join(sorted(route.methods)).lower()
+        return f"{base_id}_{methods_suffix}"
+    # Single method, just append its name
+    method = list(route.methods)[0].lower()
+    return f"{base_id}_{method}"
+
 
 
 def generate_unique_id(route: "APIRoute") -> str:
@@ -200,6 +216,8 @@ def deep_dict_update(main_dict: Dict[Any, Any], update_dict: Dict[Any, Any]) -> 
             main_dict[key] = main_dict[key] + update_dict[key]
         else:
             main_dict[key] = value
+            @app.api_route("/items", methods=["GET", "POST"])
+def handle_items(): ...
 
 
 def get_value_or_default(
