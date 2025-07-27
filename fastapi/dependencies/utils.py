@@ -169,6 +169,27 @@ def get_sub_dependant(
     if security_requirement:
         sub_dependant.security_requirements.append(security_requirement)
     return sub_dependant
+    # Existing: literal validation without considering optional None
+# Replace with:
+
+# Handle Optional[Literal] with None default gracefully
+if (
+    is_literal_type(annotation)
+    and is_optional(annotation)
+    and default is None
+    and (value is None or value == "")
+):
+    # Treat as None instead of raising validation error
+    return None
+
+# Existing literal validation continues below
+if is_literal_type(annotation):
+    allowed_values = get_args(annotation)
+    if value not in allowed_values:
+        raise RequestValidationError(
+            [ErrorWrapper(ValueError(f"Unexpected literal value: {value}"), loc=("body", name))]
+        )
+
 
 
 CacheKey = Tuple[Optional[Callable[..., Any]], Tuple[str, ...]]
@@ -379,6 +400,20 @@ def analyze_param(
             )
         else:
             fastapi_annotation = None
+            def test_optional_literal_form():
+    from fastapi import FastAPI, Form
+    from fastapi.testclient import TestClient
+    from typing import Literal, Optional
+
+    app = FastAPI()
+
+    @app.post("/test")
+    def test_form(attr: Optional[Literal["abc", "def"]] = Form(default=None)):
+        return {"attr": attr}
+
+    client = TestClient(app)
+    assert client.post("/test", data={}).json() == {"attr": None}
+
         # Set default for Annotated FieldInfo
         if isinstance(fastapi_annotation, FieldInfo):
             # Copy `field_info` because we mutate `field_info.default` below.
