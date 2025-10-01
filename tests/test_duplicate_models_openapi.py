@@ -1,6 +1,21 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
+from fastapi import FastAPI, File, Form
+from fastapi.testclient import TestClient
+
+def test_openapi_examples_for_multipart():
+    app = FastAPI()
+    @app.post("/upload")
+    async def upload(name: str = Form(..., example="Sample"), file: bytes = File(..., example=b"data")):
+        return {"name": name}
+
+    client = TestClient(app)
+    schema = client.get("/openapi.json").json()
+    content = schema["paths"]["/upload"]["post"]["requestBody"]["content"]["multipart/form-data"]["schema"]
+    assert "example" in content
+    assert content["example"]["name"] == "Sample"
+
 
 app = FastAPI()
 
