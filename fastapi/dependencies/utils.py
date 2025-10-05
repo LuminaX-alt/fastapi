@@ -1,4 +1,24 @@
 import inspect
+import typing
+import sys
+from typing import get_type_hints, ForwardRef, Annotated
+
+def resolve_param_type(param, path: str):
+    """
+    Resolve Annotated and ForwardRefs properly for dependency injection.
+    """
+    # Get the module where this parameter is defined
+    module = sys.modules.get(param.annotation.__module__, {})
+    # Resolve type hints with extras (Annotated) and ForwardRefs
+    hints = get_type_hints(
+        lambda _: None,
+        globalns=getattr(module, "__dict__", {}),
+        localns={},
+        include_extras=True
+    )
+    annotation = hints.get(param.name, param.annotation)
+    return annotation
+
 from contextlib import AsyncExitStack, contextmanager
 from copy import copy, deepcopy
 from dataclasses import dataclass
