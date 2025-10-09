@@ -4,6 +4,32 @@ from typing import List
 from fastapi import APIRouter, Depends, FastAPI, WebSocket
 from fastapi.testclient import TestClient
 from typing_extensions import Annotated
+from fastapi import FastAPI, Depends
+from fastapi.testclient import TestClient
+import pytest
+
+class DummyCM:
+    def __enter__(self):
+        self.value = "entered"
+        return self
+    def __exit__(self, exc_type, exc, tb):
+        self.value = "exited"
+
+def get_cm():
+    with DummyCM() as cm:
+        yield cm
+
+def test_context_manager_in_depends():
+    app = FastAPI()
+
+    @app.get("/cm")
+    def read(dep=Depends(get_cm)):
+        return {"state": dep.value}
+
+    client = TestClient(app)
+    response = client.get("/cm")
+    assert response.status_code == 200
+    assert response.json()["state"] == "entered"
 
 
 def dependency_list() -> List[str]:
