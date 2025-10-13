@@ -154,6 +154,17 @@ def get_sub_dependant(
         security_scopes.extend(dependency_scopes)
     if isinstance(dependency, SecurityBase):
         use_scopes: List[str] = []
+        if isinstance(param.default, Form):
+    form_data = await request.form()
+    value = form_data.get(param.alias or param.name, param.default.default)
+    # Fix: If value is missing and default is None, allow None instead of raising error
+    if value is None and param.default.default is None:
+        values[param.name] = None
+    else:
+        values[param.name] = value
+    continue
+
+       
         if isinstance(dependency, (OAuth2, OpenIdConnect)):
             use_scopes = security_scopes
         security_requirement = SecurityRequirement(
