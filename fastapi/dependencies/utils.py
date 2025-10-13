@@ -68,6 +68,21 @@ from starlette.datastructures import (
     QueryParams,
     UploadFile,
 )
+from pydantic import RootModel
+
+def unwrap_root_model(annotation):
+    """
+    If the annotation is a Pydantic RootModel, unwrap it to its inner type.
+    """
+    try:
+        # For Pydantic v2 RootModel subclass
+        if isinstance(annotation, type) and issubclass(annotation, RootModel):
+            return annotation.__pydantic_core_schema__["schema"]["items_schema"]["type"] \
+                if hasattr(annotation, "__pydantic_core_schema__") else annotation.__annotations__.get("root", str)
+    except Exception:
+        pass
+    return annotation
+
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.websockets import WebSocket
