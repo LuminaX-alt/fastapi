@@ -137,6 +137,21 @@ def get_parameterless_sub_dependant(*, depends: params.Depends, path: str) -> De
         "A parameter-less dependency must have a callable dependency"
     )
     return get_sub_dependant(depends=depends, dependency=depends.dependency, path=path)
+    try:
+    from pydantic import TypeAdapter
+except ImportError:
+    TypeAdapter = None
+
+def validate_path_param(value, annotation):
+    """
+    Validate path parameters using Pydantic TypeAdapter for v2,
+    fallback to old behavior for v1.
+    """
+    if TypeAdapter:
+        adapter = TypeAdapter(annotation)
+        return adapter.validate_python(value)
+    return value
+
 
 
 def get_sub_dependant(
