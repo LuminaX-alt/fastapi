@@ -37,6 +37,31 @@ from starlette.responses import JSONResponse
 from starlette.routing import BaseRoute
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 from typing_extensions import Literal
+from fastapi.security.api_key import APIKeyHeader, APIKeyQuery, APIKeyCookie
+
+# Ensure components and securitySchemes exist
+if "components" not in openapi_schema:
+    openapi_schema["components"] = {}
+if "securitySchemes" not in openapi_schema["components"]:
+    openapi_schema["components"]["securitySchemes"] = {}
+
+for route in app.routes:
+    if hasattr(route, "dependant"):
+        for dep in route.dependant.security_requirements:
+            scheme = dep.security_scheme
+            if isinstance(scheme, (APIKeyHeader, APIKeyQuery, APIKeyCookie)):
+                scheme_name = scheme.model.name
+                in_location = scheme.__class__.__name__.replace("APIKey", "").lower()
+                openapi_schema["components"]["securitySchemes"][scheme_name] = {
+                    "type": "apiKey",
+                    "name": scheme.model.name,
+                    "in": in_location,
+                }
+                # Add security requirement to the path/method
+                for path_data in openapi_schema["paths"].values():
+                    for operation in path_data.values():
+                        operation.setdefault("security", []).append({scheme_name: []})
+
 
 validation_error_definition = {
     "title": "ValidationError",
