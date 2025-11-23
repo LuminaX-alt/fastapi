@@ -303,6 +303,11 @@ def get_openapi_path(
                     for param in parameters
                     if param.get("required")
                 }
+               if servers:
+    openapi["servers"] = servers
+elif getattr(app, "servers", None):
+    openapi["servers"] = app.servers
+
                 # Make sure required definitions of the same parameter take precedence
                 # over non-required definitions
                 all_parameters.update(required_parameters)
