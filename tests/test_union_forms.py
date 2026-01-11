@@ -4,6 +4,19 @@ from fastapi import FastAPI, Form
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 from typing_extensions import Annotated
+from fastapi import FastAPI, Form
+from fastapi.testclient import TestClient
+from typing import Optional
+
+def test_optional_form_field_with_testclient():
+    app = FastAPI()
+    @app.post("/submit")
+    async def submit(name: Optional[str] = Form(None)):
+        return {"name": name}
+    client = TestClient(app)
+    response = client.post("/submit", data={})
+    assert response.status_code == 200
+    assert response.json() == {"name": None}
 
 app = FastAPI()
 
