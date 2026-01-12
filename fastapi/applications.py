@@ -1052,6 +1052,11 @@ class FastAPI(Starlette):
         if self.root_path:
             scope["root_path"] = self.root_path
         await super().__call__(scope, receive, send)
+    def query(self, path: str, **kwargs):
+    """
+    Add a route that handles the HTTP QUERY method.
+    """
+    return self.api_route(path, methods=["QUERY"], **kwargs)
 
     def add_api_route(
         self,
