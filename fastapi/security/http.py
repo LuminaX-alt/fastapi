@@ -21,6 +21,27 @@ class HTTPBasicCredentials(BaseModel):
     Read more about it in the
     [FastAPI docs for HTTP Basic Auth](https://fastapi.tiangolo.com/advanced/security/http-basic-auth/).
     """
+    from fastapi.openapi.models import HTTPBase as HTTPBaseModel
+
+class HTTPBasic(HTTPBaseModel):
+    def __init__(self, *, realm: str = "Authentication Required", scheme_name: str = None, auto_error: bool = True):
+        if not realm:
+            raise ValueError("realm is required for HTTP Basic authentication")
+        self.realm = realm
+        self.scheme_name = scheme_name or self.__class__.__name__
+        self.auto_error = auto_error
+        super().__init__(scheme="basic")
+
+    def __call__(self, request):
+        authorization: str = request.headers.get("Authorization")
+        if not authorization:
+            raise HTTPException(
+                status_code=401,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": f'Basic realm="{self.realm}"'},
+            )
+        # ... existing parsing code ...
+
 
     username: Annotated[str, Doc("The HTTP Basic username.")]
     password: Annotated[str, Doc("The HTTP Basic password.")]
