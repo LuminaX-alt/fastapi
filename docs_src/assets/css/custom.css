@@ -1,0 +1,24 @@
+/* Wrap container to contain children */
+.announce-wrapper {
+    position: relative;
+    overflow: hidden;         /* Prevents any overflowing child from causing scroll */
+    display: flex;            /* Aligns content nicely */
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: #f9f9f9;      /* optional: light background */
+}
+
+/* Fix sponsor badge positioning */
+.announce-wrapper .sponsor-badge {
+    position: static;         /* Removes absolute positioning */
+    display: inline-block;    /* Keeps it sized to content */
+    font-size: 0.5rem;
+    color: #fff;
+    background-color: #666;
+    border-radius: 10px;
+    padding: 0 10px;
+    margin-left: auto;        /* Pushes it to the right if needed */
+    z-index: 10;
+    white-space: nowrap;      /* Prevents text wrapping */
+}
